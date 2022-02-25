@@ -444,8 +444,8 @@ router.get('/:id/stats', async (req, res) => {
     plays: project.play_count,
     hearts: project.number_of_stars,
     title: {
-      original: project.title,
-      short: shortTitle,
+      'original': project.title,
+      'short': shortTitle,
       matchesTitleRegex
     },
     builderStats: await ProjectStatistics.builderStats(project)
