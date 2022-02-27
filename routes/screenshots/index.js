@@ -8,7 +8,7 @@ const deta = Deta(process.env.PROJECT_KEY)
 const screenshotMapDB = deta.Base('screenshot-map')
 
 router.post('/speedrun', async (req, res) => {
-  const postExp = /^(https:\/\/forum\.gethopscotch\.com\/t(?:\/[^/]+)?\/50533\/(\d+))/
+  const postExp = /^(https:\/\/forum\.gethopscotch\.com\/t(?:\/[^/]+)?\/49377\/(\d+))/
   const schema = Joi.object({
     post_link: Joi.string().required().regex(postExp)
   }, { stripUnknown: true })
