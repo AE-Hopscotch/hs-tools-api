@@ -16,7 +16,7 @@ const corsOptions = {
   optionsSuccessStatus: 200
 }
 const app = express()
-app.use(express.json())
+app.use(express.json({ extended: true, limit: '5mb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(cors(corsOptions))
 
