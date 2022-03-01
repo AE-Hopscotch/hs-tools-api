@@ -26,12 +26,15 @@
   },
   "dependencies": {
     "axios": "^0.21.4",
+    "buffer-type": "^1.0.0",
     "cors": "^2.8.5",
     "deta": "^1.0.0",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "googleapis": "^92.0.0",
+    "invert-color": "^2.0.0",
     "joi": "^17.4.2",
+    "node-html-to-image": "^3.2.4",
     "nodemailer": "^6.7.2",
     "uuid": "^8.3.2"
   }

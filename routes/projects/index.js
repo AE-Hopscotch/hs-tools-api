@@ -1,7 +1,11 @@
 const express = require('express')
 const router = express.Router()
-// const { Deta } = require('deta')
 const axios = require('axios')
+const Joi = require('joi')
+const htmlToImage = require('node-html-to-image')
+const hashStringToColor = require('../../custom/hash-string-color')
+const bufferType = require('buffer-type')
+const invert = require('invert-color')
 
 async function getProject (id) {
   const projectResponse = await axios({
@@ -434,6 +438,44 @@ const ProjectStatistics = {
   }
 }
 
+async function letterAvatar (title, cursive) {
+  const color = hashStringToColor(title)
+  const font = cursive ? 'Brush Script MT' : 'Lato, sans-serif'
+  const iconImg = await htmlToImage({
+    html: `<html style="width:256px;height:256px;background-color:${color};color:${invert(color, true)};font-size:128px;font-family:${font}">
+    <body style="display:flex;justify-content:center;align-items:center;">${title.toUpperCase()[0]}</body></html>`
+  })
+  return Buffer.from(iconImg || '', 'binary')
+}
+async function thumbnailBase64 (url, title, preferLetter, cursiveLetter) {
+  const urlObject = new URL(url)
+  if (urlObject.protocol === 'data:') return url
+
+  let icon
+  if (preferLetter) {
+    icon = await letterAvatar(title, cursiveLetter)
+  } else {
+    const iconResponse = await axios({
+      method: 'GET',
+      url: url,
+      responseType: 'arraybuffer',
+      headers: {
+        origin: urlObject.origin
+      }
+    }).catch(() => {})
+    if (iconResponse?.data) {
+      // Thumbnail Exists
+      console.log(url)
+      icon = Buffer.from(iconResponse.data || '', 'binary')
+    } else {
+      // No thumbnail found
+      icon = await letterAvatar(title, cursiveLetter)
+    }
+  }
+  const mimeType = bufferType(icon)?.type
+  return `data:${mimeType};base64,${icon.toString('base64')}`
+}
+
 router.get('/:id/stats', async (req, res) => {
   const project = await getProject(req.params.id)
   const shortTitle = project.title.replace(/['’]/gi, '').replace(/\s+/gi, ' ').replace(/[:|(]/gi, ' - ').split(' - ')[0]
@@ -450,6 +492,22 @@ router.get('/:id/stats', async (req, res) => {
     },
     builderStats: await ProjectStatistics.builderStats(project)
   })
+})
+
+router.post('/:id/pwa', async (req, res) => {
+  const project = await getProject(req.params.id)
+  const schema = Joi.object({
+    icon_url: Joi.string().uri({ scheme: ['http', 'https', 'data'] }),
+    prefer_letter: Joi.boolean(),
+    cursive_letter: Joi.boolean()
+  }, { stripUnknown: true })
+  const { error } = schema.validate(req.body)
+  if (error) return res.status(400).send({ error: 'Parameter ' + error.details[0].path[0] + ' is invalid' })
+
+  const iconUrl = req.body.icon_url || `https://s3.amazonaws.com/hopscotch-cover-images/production/${req.params.id}.png`
+  const iconB64 = await thumbnailBase64(iconUrl, project.title, req.body.prefer_letter, req.body.cursive_letter)
+
+  return res.send(iconB64)
 })
 
 module.exports = router
