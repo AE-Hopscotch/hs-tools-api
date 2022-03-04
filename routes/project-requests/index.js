@@ -7,6 +7,7 @@ const { Deta } = require('deta')
 const deta = Deta(process.env.PROJECT_KEY)
 const prDB = deta.Base('project-requests')
 const uuid = require('uuid')
+const { compressToEncodedURIComponent: compress } = require('lz-string')
 
 function randomChars (length) {
   const str = Math.round(Math.random() * 36 ** length).toString(36)
@@ -18,6 +19,12 @@ async function getMatchFromSecretParam (req, res, next) {
   if (dbRes.count !== 1) return res.status(400).send({ error: 'Incorrect number of entries found' })
   req.dbItem = dbRes.items[0]
   next()
+}
+
+function compressForm (json) {
+  const text = JSON.stringify(json)
+  const compressed = compress(text)
+  return compressed
 }
 
 const modReasons = [
@@ -67,26 +74,27 @@ router.post('/', async (req, res) => {
   const response = await prDB.put({
     created_at: new Date().toISOString(),
     downloaded_at: null,
+    edit_reason: req.body['edit-reason'],
     key: Date.now().toString(36) + '-' + randomChars(5),
     output: null,
     project_uuid: project.uuid,
     secret: uuid.v4(),
     status: 'sent'
   })
-  const rejectForm = Buffer.from(JSON.stringify({
+  const rejectForm = compressForm({
     target: `/project-requests/${response.key}/reject`,
     fields: [
       { 'defaultText': 'Duplicate Project', name: 'reason', type: 'text' },
       { 'defaultText': response.secret, name: 'key', type: 'text' }
     ]
-  })).toString('base64')
-  const completeForm = Buffer.from(JSON.stringify({
+  })
+  const completeForm = compressForm({
     target: `/project-requests/${response.key}/complete`,
     fields: [
       { 'defaultText': '', name: 'output', type: 'text' },
       { 'defaultText': response.secret, name: 'key', type: 'text' }
     ]
-  })).toString('base64')
+  })
 
   await sendMail(process.env.NODEMAILER_USER, 'HS Tools API Notification',
     `<!DOCTYPE html><html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml"><head><title></title>
@@ -96,11 +104,11 @@ router.post('/', async (req, res) => {
       </span></p><p style="margin: 0; font-size: 14px; text-align: center;"><span style="font-size:14px;">
       Project UUID: ${project.uuid}
       </span></p><p style="margin: 0; font-size: 14px; text-align: center;"><span style="font-size:14px;">
-      Editing Reason: ${req.body['edit-reason']}
+      Editing Reason: ${response.edit_reason}
       </span></p></div></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table><table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%"><tbody><tr><td><table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; color: #000000; width: 500px;" width="500"><tbody><tr><td class="column" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top; border-top: 0px; border-right: 0px; border-bottom: 0px; border-left: 0px;" width="33.333333333333336%"><table border="0" cellpadding="0" cellspacing="0" class="button_block" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%"><tr><td style="text-align:center;padding-top:15px;padding-right:10px;padding-bottom:15px;padding-left:10px;"><div align="center">
-      <a href="https://hs-tools-api.deta.dev/form/${encodeURIComponent(rejectForm)}" style="text-decoration:none;display:inline-block;color:#ffffff;background-color:#b31010;border-radius:4px;width:auto;border-top:1px solid #b31010;border-right:1px solid #b31010;border-bottom:1px solid #b31010;border-left:1px solid #b31010;padding-top:5px;padding-bottom:5px;font-family:Arial, Helvetica Neue, Helvetica, sans-serif;text-align:center;mso-border-alt:none;word-break:keep-all;" target="_blank"><span style="padding-left:20px;padding-right:20px;font-size:16px;display:inline-block;letter-spacing:normal;"><span style="font-size: 16px; line-height: 2; word-break: break-word; mso-line-height-alt: 32px;">Reject</span></span></a></div></td></tr></table></td><td class="column" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top; border-top: 0px; border-right: 0px; border-bottom: 0px; border-left: 0px;" width="33.333333333333336%"><table border="0" cellpadding="0" cellspacing="0" class="button_block" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%"><tr><td style="text-align:center;padding-top:15px;padding-right:10px;padding-bottom:15px;padding-left:10px;"><div align="center">
-      <a href="https://hs-tools-api.deta.dev/project-requests/${response.key}/received?key=${response.secret}" style="text-decoration:none;display:inline-block;color:#ffffff;background-color:#3AAEE0;border-radius:4px;width:auto;border-top:1px solid #3AAEE0;border-right:1px solid #3AAEE0;border-bottom:1px solid #3AAEE0;border-left:1px solid #3AAEE0;padding-top:5px;padding-bottom:5px;font-family:Arial, Helvetica Neue, Helvetica, sans-serif;text-align:center;mso-border-alt:none;word-break:keep-all;" target="_blank"><span style="padding-left:20px;padding-right:20px;font-size:16px;display:inline-block;letter-spacing:normal;"><span style="font-size: 16px; line-height: 2; word-break: break-word; mso-line-height-alt: 32px;">Received</span></span></a></div></td></tr></table></td><td class="column" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top; border-top: 0px; border-right: 0px; border-bottom: 0px; border-left: 0px;" width="33.333333333333336%"><table border="0" cellpadding="0" cellspacing="0" class="button_block" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%"><tr><td style="text-align:center;padding-top:15px;padding-right:10px;padding-bottom:15px;padding-left:10px;"><div align="center">
-      <a href="https://hs-tools-api.deta.dev/form/${encodeURIComponent(completeForm)}" style="text-decoration:none;display:inline-block;color:#ffffff;background-color:#197b23;border-radius:4px;width:auto;border-top:1px solid #197b23;border-right:1px solid #197b23;border-bottom:1px solid #197b23;border-left:1px solid #197b23;padding-top:5px;padding-bottom:5px;font-family:Arial, Helvetica Neue, Helvetica, sans-serif;text-align:center;mso-border-alt:none;word-break:keep-all;" target="_blank"><span style="padding-left:20px;padding-right:20px;font-size:16px;display:inline-block;letter-spacing:normal;"><span style="font-size: 16px; line-height: 2; word-break: break-word; mso-line-height-alt: 32px;">Complete</span></span></a></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></body></html>
+      <a href="https://hs-tools-api.up.railway.app/form/${rejectForm}" style="text-decoration:none;display:inline-block;color:#ffffff;background-color:#b31010;border-radius:4px;width:auto;border-top:1px solid #b31010;border-right:1px solid #b31010;border-bottom:1px solid #b31010;border-left:1px solid #b31010;padding-top:5px;padding-bottom:5px;font-family:Arial, Helvetica Neue, Helvetica, sans-serif;text-align:center;mso-border-alt:none;word-break:keep-all;" target="_blank"><span style="padding-left:20px;padding-right:20px;font-size:16px;display:inline-block;letter-spacing:normal;"><span style="font-size: 16px; line-height: 2; word-break: break-word; mso-line-height-alt: 32px;">Reject</span></span></a></div></td></tr></table></td><td class="column" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top; border-top: 0px; border-right: 0px; border-bottom: 0px; border-left: 0px;" width="33.333333333333336%"><table border="0" cellpadding="0" cellspacing="0" class="button_block" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%"><tr><td style="text-align:center;padding-top:15px;padding-right:10px;padding-bottom:15px;padding-left:10px;"><div align="center">
+      <a href="https://hs-tools-api.up.railway.app/project-requests/${response.key}/received?key=${response.secret}" style="text-decoration:none;display:inline-block;color:#ffffff;background-color:#3AAEE0;border-radius:4px;width:auto;border-top:1px solid #3AAEE0;border-right:1px solid #3AAEE0;border-bottom:1px solid #3AAEE0;border-left:1px solid #3AAEE0;padding-top:5px;padding-bottom:5px;font-family:Arial, Helvetica Neue, Helvetica, sans-serif;text-align:center;mso-border-alt:none;word-break:keep-all;" target="_blank"><span style="padding-left:20px;padding-right:20px;font-size:16px;display:inline-block;letter-spacing:normal;"><span style="font-size: 16px; line-height: 2; word-break: break-word; mso-line-height-alt: 32px;">Received</span></span></a></div></td></tr></table></td><td class="column" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top; border-top: 0px; border-right: 0px; border-bottom: 0px; border-left: 0px;" width="33.333333333333336%"><table border="0" cellpadding="0" cellspacing="0" class="button_block" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%"><tr><td style="text-align:center;padding-top:15px;padding-right:10px;padding-bottom:15px;padding-left:10px;"><div align="center">
+      <a href="https://hs-tools-api.up.railway.app/form/${completeForm}" style="text-decoration:none;display:inline-block;color:#ffffff;background-color:#197b23;border-radius:4px;width:auto;border-top:1px solid #197b23;border-right:1px solid #197b23;border-bottom:1px solid #197b23;border-left:1px solid #197b23;padding-top:5px;padding-bottom:5px;font-family:Arial, Helvetica Neue, Helvetica, sans-serif;text-align:center;mso-border-alt:none;word-break:keep-all;" target="_blank"><span style="padding-left:20px;padding-right:20px;font-size:16px;display:inline-block;letter-spacing:normal;"><span style="font-size: 16px; line-height: 2; word-break: break-word; mso-line-height-alt: 32px;">Complete</span></span></a></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></body></html>
     `
   ).catch(
     e => console.log(e)

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ae-hopscotch.github.io/hs-tools/icons/favicon-32x32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {{#helpers}}
+    {{#if title}}
+      <title>{{title}} | HS Tools</title>
+    {{else}}
+      <title>HS Tools API Form</title>
+    {{/if}}
+  {{/helpers}}
+  <style>
+    :root {
+      --input-wrapper-child-width: 65%;
+      background-color: #b0d9d4;
+    }
+    body, input {
+      font-size: 16px;
+    }
+    * {
+      font-family: 'Arial', sans-serif;
+    }
+    h1 {
+      font-size: 1.67em;
+    }
+
+    form {
+      width: 640px;
+      max-width: calc(100% - 16px);
+      margin: auto;
+    }
+    div.label {
+      margin: 0 0 10px;
+    }
+
+    div.item-container {
+      max-width: 80vw;
+      margin: 16px 0;
+      display: block;
+      padding: 30px 40px;
+      box-shadow: 0 0 1px 0px #0b5b51;
+      border-radius: 8px;
+      background-color: white;
+    }
+    .item-container.header {
+      border-top: 10px solid #0b5b51;
+    }
+    .input-wrapper {
+      position: relative;
+    }
+    .input-wrapper::before {
+      content: ' ';
+      width: 0;
+      height: calc(100% - 18px);
+      display: block;
+      position: absolute;
+      top: 0;
+      z-index: 1;
+      left: calc(var(--input-wrapper-child-width) / 2);
+      transform: translateX(-50%);
+      border-bottom: 2.5px solid #0b5b51;
+      margin: 8px 0;
+      transition: width 0.3s;
+      pointer-events: none;
+    }
+    .input-wrapper:focus-within::before {
+      width: var(--input-wrapper-child-width);
+    }
+    .input-wrapper input {
+      width: var(--input-wrapper-child-width);
+      margin: 8px 0;
+      padding: 8px 0;
+      border: none;
+      border-bottom: 2px solid gray;
+      position: relative;
+      outline: none;
+    }
+    input[type="submit"] {
+      --saturation: 78%;
+      --brightness: 20%;
+      background-color: hsl(173, var(--saturation), var(--brightness));
+      padding: 12px 24px;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      box-shadow: 0 0 1px 0px #888;
+      cursor: pointer;
+      transition: background-color 0.25s;
+    }
+    input[type="submit"]:hover {
+       --saturation: 60%;
+       --brightness: 30%;
+    }
+    input[type="submit"]:active {
+       --saturation: 30%;
+       --brightness: 60%;
+    }
+    @media only screen and (max-width: 560px) {
+      :root {
+        --input-wrapper-child-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <form action="{{target}}" method="{{method}}">
+    <div class="item-container header">
+      {{#helpers}}
+        {{#if title}}
+          <h1>{{title}}</h1>
+        {{else}}
+          <h1>{{target}}</h1>
+        {{/if}}
+      {{/helpers}}
+    </div>
+    {{#helpers}}
+      {{#each fields}}
+        <div class="item-container">
+          <div class="label">{{name}}</div>
+          <div class="input-wrapper">
+            <input type="{{type}}" name="{{name}}" value="{{defaultText}}" placeholder="{{placeholder}}"></label><br>
+          </div>
+        </div>
+      {{/each}}
+    {{/helpers}}
+    <input type="submit">
+    <div data-form="{{#data}}{{this}}{{/data}}" hidden></div>
+  </form>
+</body>
+</html>

@@ -2,6 +2,7 @@ const express = require('express')
 const fs = require('fs')
 const path = require('path')
 const cors = require('cors')
+const handlebars = require('express-handlebars')
 
 require('dotenv').config()
 const whitelist = process.env.CORS_ORIGINS.split(', ')
@@ -19,6 +20,13 @@ const app = express()
 app.use(express.json({ extended: true, limit: '5mb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(cors(corsOptions))
+
+app.engine('handlebars', handlebars.engine({
+  defaultLayout: false,
+  partialsDir: 'views/partials/'
+}))
+app.set('view engine', 'handlebars')
+app.set('views', path.join(__dirname, 'views'))
 
 // Routes
 function recursiveRoutes (folderName) {
