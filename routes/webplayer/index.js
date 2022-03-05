@@ -67,7 +67,7 @@ async function getPlayerFile (req, res) {
     : { path: `versions/${version}/webplayer.min.js`, date: Date.now(), pixi: '4.8.6', 'player': version }
 
   if (!latest) {
-    res.header({ 'Content-Type': 'application/json' }).send(String(latest))
+    res.status(404).header({ 'Content-Type': 'application/json' }).send(String(latest))
     return null
   }
   const playerResponse = (await axios({
@@ -79,7 +79,11 @@ async function getPlayerFile (req, res) {
       'Accept': '*/*',
       'Accept-Language': 'en-us'
     }
+  }).catch(e => {
+    res.status(404).header({ 'Content-Type': 'application/json' }).send('null')
   }))?.data
+
+  if (!playerResponse || res.headersSent) return
   return playerResponse
 }
 
