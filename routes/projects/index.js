@@ -495,8 +495,24 @@ router.get('/:id/stats', async (req, res) => {
 })
 
 router.post('/:id/pwa', async (req, res) => {
+  const AEPLAYERPAGE = (await axios({
+    url: 'https://ae-hopscotch.github.io/hs-tools/play-project/'
+  }).catch(e => console.error(e)))?.data
+  const playerPageResponse = {
+    head: AEPLAYERPAGE.match(/<head(.|[\r\n\s])*?<\/head>/)[0].replace(/<\/?head.*?>/g, '')
+      .replace(/<(link|meta).*(icon|twitter|og:|description|theme-color).*>|<meta.*app.*>/g, '') // Strip webapp meta tags
+      .replace(/="\/hs-tools\/|="\.\.\//g, '="https://ae-hopscotch.github.io/hs-tools/')
+      .replace(/(src|href)="([^:"]*)"/g, '$1="https://ae-hopscotch.github.io/hs-tools/play-project/$2"'),
+    body: AEPLAYERPAGE.match(/<body(.|[\r\n\s])*?<\/body>/)[0]
+      .replace(/="\/hs-tools\/|="\.\.\//g, '="https://ae-hopscotch.github.io/hs-tools/')
+      .replace(/(src|href)="([^:"]*)"/g, '$1="https://ae-hopscotch.github.io/hs-tools/play-project/$2"')
+      .replace(/"application.js"/g, '"https://ae-hopscotch.github.io/hs-tools/play-project/application.js"')
+  }
+
   const project = await getProject(req.params.id)
   const schema = Joi.object({
+    bg_color: Joi.string(),
+    hide_elements: Joi.string(),
     icon_url: Joi.string().uri({ scheme: ['http', 'https', 'data'] }),
     prefer_letter: Joi.boolean(),
     cursive_letter: Joi.boolean()
@@ -507,7 +523,18 @@ router.post('/:id/pwa', async (req, res) => {
   const iconUrl = req.body.icon_url || `https://s3.amazonaws.com/hopscotch-cover-images/production/${req.params.id}.png`
   const iconB64 = await thumbnailBase64(iconUrl, project.title, req.body.prefer_letter, req.body.cursive_letter)
 
-  return res.send(iconB64)
+  const bgColor = req.body.bg_color
+  res.render('project', {
+    iconB64,
+    ...playerPageResponse,
+    query: `?id=${req.params.id}&play=1&hide=${encodeURIComponent(req.body.hide_elements)}&bgColor=${bgColor}`
+  })
+})
+router.get('/:id/pwa', (req, res) => {
+  res.redirect(`https://ae-hopscotch.github.io/hs-tools/play-project/?${new URLSearchParams(req.query).toString()}`)
+})
+router.get('/:id/:path*', (req, res) => {
+  res.redirect('https://ae-hopscotch.github.io/hs-tools/play-project/' + req.params.path + req.params[0])
 })
 
 module.exports = router
