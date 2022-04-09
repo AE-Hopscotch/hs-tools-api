@@ -94,14 +94,16 @@ router.post('/', async (req, res) => {
       { 'defaultText': response.secret, name: 'key', type: 'text' }
     ]
   })
+  const profilePicture = project.user.remote_avatar_url || `https://ae-hopscotch.github.io/hs-tools/images/webavatars/${project.user?.avatar_type || 0}.png`
   await axios({
     method: 'POST',
     url: process.env.PROJECT_REQUEST_WEBHOOK,
     data: {
       embeds: [{
         color: 0x521256,
-        author: { name: 'New Project Request', iconURL: `https://s3.amazonaws.com/hopscotch-cover-images/production/${project.uuid}.png` },
+        author: { name: 'New Project Request', icon_url: profilePicture },
         title: '',
+        thumbnail: { url: `https://s3.amazonaws.com/hopscotch-cover-images/production/${project.uuid}.png` },
         description: `You have a new project request for [${project.title}](https://c.gethopscotch.com/p/${project.uuid})`,
         fields: [
           { name: 'UUID', value: project.uuid, inline: true },
