@@ -9,7 +9,7 @@ const filterEntriesDB = deta.Base('filter')
 const requestsDB = deta.Base('requests')
 
 async function getEntries (req) {
-  const versionId = '1.4.0'
+  const versionId = '1.4.1'
   let filterRes = await filterEntriesDB.fetch()
   let filterEntries = filterRes.items
   while (filterRes.last) {
