@@ -184,6 +184,7 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
     if (newFile === playerFile && !skipfails) fails++
     totalSubs++
     playerFile = newFile
+    return { success: newFile !== playerFile }
   }
   const semVer = req.params.version.split('.')
   if (config.emojiSrc) replacement(/(emoji.basePath=)"\/assets"/g, '$1"https://d2j12ek52gvmx9.cloudfront.net/emojis/"', true)
@@ -201,10 +202,25 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
         // Also support the official comment block
         "case $2HSBlockType.Comment: /*AE_MOD*/ if (/^_ae_webplayer_action:/g.test($3[0].value)){AE_MOD.webplayer_action($3[0].value.split('_ae_webplayer_action:')[1], (($3[1])?$3[1].computedValue(this):undefined),this);}break;}},"
     )
-    replacement(
+    // For 1.5.x and earlier
+    const details = replacement(
       /case (\w\.)?HSBlockType.MathOperatorAdd:\w+\s?.{0,12}(Param(?:eter)?Value)\((\w)\)/,
       "case $1HSBlockType.None: /*AE_MOD*/ if(/^_ae_webplayer_action:/g.test(this.parameters[0].value)){return AE_MOD.webplayer_action(this.parameters[0].value.split('_ae_webplayer_action:')[1],((this.parameters[1])?this.second$2($3):undefined),this);}return 0;$&"
     )
+    if (!details.success) {
+      // Ignore the previous fail because we're on a newer player version
+      fails--
+      replacement(
+        /case (\w\.)?HSBlockType.MathOperatorAdd:\w+\s?.{0,24}parseValue\((\w).{0,36}parseValue\((\w)/,
+        "case $1HSBlockType.None: /*AE_MOD*/ if(/^_ae_webplayer_action:/g.test($2)){return AE_MOD.webplayer_action($2.split('_ae_webplayer_action:')[1],$3,this);}return 0;$&"
+      )
+      // Force BlockType None to perform a math calculation
+      replacement(
+        /case (\w)\.HSBlockType\.Random110:case \1\.HSBlockType\.Random1100:case \1\.HSBlockType\.Random11000:case \1\.HSBlockType\.Random:/,
+        '$&case $1.HSBlockType.None:'
+      )
+      console.log(fails)
+    }
   }
   if (config.includeWebactScript) {
     const BUNDLED_AEWEBACTIONS = [
