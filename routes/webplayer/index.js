@@ -219,7 +219,6 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
         /case (\w)\.HSBlockType\.Random110:case \1\.HSBlockType\.Random1100:case \1\.HSBlockType\.Random11000:case \1\.HSBlockType\.Random:/,
         '$&case $1.HSBlockType.None:'
       )
-      console.log(fails)
     }
   }
   if (config.includeWebactScript) {
