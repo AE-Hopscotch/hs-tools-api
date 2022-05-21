@@ -27,10 +27,12 @@ router.post('/blocks', adminAPIKeyMiddleware, async (req, res) => {
     description: Joi.string().required(),
     id: Joi.number().integer().required(),
     name: Joi.string().required(),
+    label: Joi.string().required(),
     other_info: Joi.array().items(Joi.string()).required(),
     parameters: Joi.array().items(
       Joi.object({
         description: Joi.string().required(),
+        label: Joi.string().required().allow(''),
         type: Joi.string().required()
       })
     ),
@@ -39,7 +41,7 @@ router.post('/blocks', adminAPIKeyMiddleware, async (req, res) => {
   }, { stripUnknown: true })
   const block = req.body.block
   const { error } = blockSchema.validate(req.body.block)
-  if (error) res.send({ success: false, error: 'Missing or invalid parameters', details: error.details })
+  if (error) return res.send({ success: false, error: 'Missing or invalid parameters', details: error.details })
   await blocksDB.put(block, block.id.toString())
   res.send({ success: true, block: block })
 })
