@@ -181,10 +181,14 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
   let totalSubs = 0
   function replacement (regex, replacer, skipfails) {
     const newFile = playerFile.replace(regex, replacer)
-    if (newFile === playerFile && !skipfails) fails++
+    const success = newFile !== playerFile
+    if (!success && !skipfails) {
+      fails++
+      console.log('Failed:', regex)
+    }
     totalSubs++
     playerFile = newFile
-    return { success: newFile !== playerFile }
+    return { success }
   }
   const semVer = req.params.version.split('.')
   if (config.emojiSrc) replacement(/(emoji.basePath=)"\/assets"/g, '$1"https://d2j12ek52gvmx9.cloudfront.net/emojis/"', true)
@@ -204,7 +208,7 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
     )
     // For 1.5.x and earlier
     const details = replacement(
-      /case (\w\.)?HSBlockType.MathOperatorAdd:\w+\s?.{0,12}(Param(?:eter)?Value)\((\w)\)/,
+      /case (\w\.)?HSBlockType.MathOperatorAdd:\w+\s?.{0,24}(Param(?:eter)?Value)\((\w)\)/,
       "case $1HSBlockType.None: /*AE_MOD*/ if(/^_ae_webplayer_action:/g.test(this.parameters[0].value)){return AE_MOD.webplayer_action(this.parameters[0].value.split('_ae_webplayer_action:')[1],((this.parameters[1])?this.second$2($3):undefined),this);}return 0;$&"
     )
     if (!details.success) {
@@ -216,8 +220,8 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
       )
       // Force BlockType None to perform a math calculation
       replacement(
-        /case (\w)\.HSBlockType\.Random110:case \1\.HSBlockType\.Random1100:case \1\.HSBlockType\.Random11000:case \1\.HSBlockType\.Random:/,
-        '$&case $1.HSBlockType.None:'
+        /case (\w\.)?HSBlockType\.Random110:case \1HSBlockType\.Random1100:case \1HSBlockType\.Random11000:case \1HSBlockType\.Random:/,
+        '$&case $1HSBlockType.None:'
       )
     }
   }
