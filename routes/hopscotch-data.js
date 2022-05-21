@@ -27,7 +27,7 @@ router.post('/blocks', adminAPIKeyMiddleware, async (req, res) => {
     description: Joi.string().required(),
     id: Joi.number().integer().required(),
     name: Joi.string().required(),
-    label: Joi.string().required(),
+    label: Joi.string().required().allow(''),
     other_info: Joi.array().items(Joi.string()).required(),
     parameters: Joi.array().items(
       Joi.object({
