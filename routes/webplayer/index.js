@@ -270,7 +270,7 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
       }/*AE_MOD block errors. Errors do not catch these blocks: Play Sound, CLone, Destroy, Change X, Change Y, Move, Rotate, Change Scene, Broadcast Message*/${''
       }console.groupCollapsed("%cBlock Execution Error","color:white;font-weight:900;display:block;background-color:red;border:2px solid salmon;padding:2px 4px;");${''
       }console.log("Block Code:",$2);console.log("Active Object UUID:"+$1.objectID);${''
-      }$1.stageRules.forEach(r=>{if(r.isActive)console.log("Active Rule Type: "+r.eventBlock.parameterBlock.type);});console.groupEnd();throw E;}`)
+      }console.error(E, $1, $2);$1.stageRules.forEach(r=>{if(r.isActive)console.log("Active Rule Type: "+r.eventBlock.parameterBlock.type);});console.groupEnd();throw E;}`)
   }
   if (config.customs) {
     replacement(/this\.getImageUrlFromBaseUrl(\((\w)\))?(:this.getImageUrlFromApp(?:\1)?(?:\)\((\w))?)/, (m0 = '', m1 = '', m2 = '', m3 = '', m4 = '') => {
