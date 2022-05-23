@@ -32,9 +32,6 @@ const modReasons = [
   ['keyboard-support', 'Add Keyboard Support'],
   ['filter-check', 'Project is filtered by an unknown word'],
   ['toggle-beta-editor', 'Enable or Disable the Beta Editor'],
-  ['lock-project', 'Make the project uneditable'],
-  ['freeze-issue', 'The project does not load'],
-  ['clean-code', 'Reduce Lag and Optimize Performance'],
   ['upgrade-player', 'Update the player without breaking anything']
 ]
 
