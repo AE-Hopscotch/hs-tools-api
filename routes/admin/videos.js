@@ -13,7 +13,7 @@ router.use(adminAPIKeyMiddleware)
 router.post('/bulkupdate', async (req, res) => {
   if (!req.body.videos && !req.body.channels) {
     res.status(400).send({
-      status: 'error',
+      success: false,
       error: 'There are no videos or channels provided'
     })
     return
@@ -23,22 +23,23 @@ router.post('/bulkupdate', async (req, res) => {
   let updatedChannels = []
   if (req.body.videos) {
     const videoSchema = Joi.object({
-      date: Joi.date().required(),
-      group: Joi.string().required(),
-      icon: Joi.string().required().pattern(/^fa-[0-9a-zA-Z-]+$/),
-      key: Joi.string(),
-      name: Joi.string().required().max(24),
-      public: Joi.boolean().required(),
-      time: Joi.number(),
-      url: Joi.string().uri()
+      'date': Joi.date().required(),
+      'group': Joi.string().required(),
+      'icon': Joi.string().required().pattern(/^fa-[0-9a-zA-Z-]+$/),
+      'key': Joi.string(),
+      'name': Joi.string().required().max(24),
+      'public': Joi.boolean().required(),
+      'time': Joi.number(),
+      'url': Joi.string().uri()
     })
     const videoResponses = await Promise.all(req.body.videos.filter(v => !!v).map(async (video) => {
       const { error, value } = videoSchema.validate(video)
+      if (error) return { error }
       const id = video.key || video.url.replace(/.*\/|\.[0-9a-zA-Z]+/g, '')
       if (value) {
         await videosDB.put(video, id)
       }
-      return { error, value }
+      return { value }
     }))
     const videoErrors = videoResponses.filter(result => !!result.error).map(e => e.error)
     errors = errors.concat(videoErrors)
@@ -53,10 +54,11 @@ router.post('/bulkupdate', async (req, res) => {
     })
     const channelResponses = await Promise.all(req.body.channels.map(async (channel) => {
       const { error, value } = channelSchema.validate(channel)
+      if (error) return { error }
       if (value) {
         await channelsDB.put(channel)
       }
-      return { error, value }
+      return { value }
     }))
     const channelErrors = channelResponses.filter(r => !!r.error).map(e => e.error)
     errors = errors.concat(channelErrors)
@@ -85,7 +87,7 @@ router.get('/', async (req, res) => {
     videoRes = await videosDB.fetch({}, { last: videoRes.last })
     videos = videos.concat(videoRes.items)
   }
-  res.send({ items: videos, count: videos.length })
+  res.send({ items: videos, count: videos.length, success: true })
 })
 
 module.exports = router

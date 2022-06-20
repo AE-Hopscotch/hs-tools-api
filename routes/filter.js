@@ -101,7 +101,7 @@ async function checkFilter (req, res) {
 
 router.get('/regex', async (req, res) => {
   const { expression, wordList, version } = await getEntries(req)
-  res.send({ status: 'success', expression, wordList, version })
+  res.send({ success: true, expression, wordList, version })
 })
 
 router.route('/check')

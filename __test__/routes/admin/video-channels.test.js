@@ -7,14 +7,13 @@ function mockDeta (mockedValue) {
 }
 
 const sampleItem = {
-  'expression': '\\b(?:ip\\s?)?address\\b',
-  'key': 'address',
-  'label': 'Address',
-  'rules': [3],
-  'severity': 0
+  'auth_code': 'SamplePassword',
+  'key': 'sample',
+  'requires_auth': true,
+  'title': 'SampleName'
 }
 
-describe('GET /admin/filter/entries', () => {
+describe('GET /admin/video-channels', () => {
   beforeEach(() => {
     this.headers = { 'api-token': process.env.ADMIN_API_KEY }
     this.app = mockDeta({
@@ -24,7 +23,7 @@ describe('GET /admin/filter/entries', () => {
   })
   test('should return a list with status 200', async () => {
     const { status, body: response } = await request(this.app)
-      .get('/admin/filter/entries')
+      .get('/admin/video-channels')
       .set(this.headers)
 
     expect(status).toBe(200)
@@ -34,7 +33,7 @@ describe('GET /admin/filter/entries', () => {
   })
 })
 
-describe('PUT /admin/filter/entry', () => {
+describe('PUT /admin/video-channels', () => {
   beforeEach(() => {
     this.headers = {
       'api-token': process.env.ADMIN_API_KEY,
@@ -44,7 +43,7 @@ describe('PUT /admin/filter/entry', () => {
   })
   test('should return status 400 on empty request body', async () => {
     const { status, body: response } = await request(this.app)
-      .put('/admin/filter/entry')
+      .put('/admin/video-channels')
       .set(this.headers)
       .send()
 
@@ -55,9 +54,9 @@ describe('PUT /admin/filter/entry', () => {
   })
   test('should return error details when missing parameters', async () => {
     const { status, body: response } = await request(this.app)
-      .put('/admin/filter/entry')
+      .put('/admin/video-channels')
       .set(this.headers)
-      .send({ data: { label: 'TEST' } })
+      .send({ data: { title: 'TEST' } })
 
     expect(status).toBe(400)
     expect(response.success).toBe(false)
@@ -66,7 +65,7 @@ describe('PUT /admin/filter/entry', () => {
   })
   test('should return 200 and call DB put on valid request', async () => {
     const { status, body: response } = await request(this.app)
-      .put('/admin/filter/entry')
+      .put('/admin/video-channels')
       .set(this.headers)
       .send({
         data: sampleItem
@@ -79,26 +78,53 @@ describe('PUT /admin/filter/entry', () => {
   })
 })
 
-describe('DELETE /admin/filter/entries/:key', () => {
+describe('GET /admin/video-channels/:key', () => {
+  beforeEach(() => {
+    this.headers = { 'api-token': process.env.ADMIN_API_KEY }
+  })
+  test('returns item with status 200 if it exists', async () => {
+    const app = mockDeta(sampleItem)
+    const { status, body: response } = await request(app)
+      .get('/admin/video-channels/sample')
+      .set(this.headers)
+
+    expect(status).toBe(200)
+    expect(response).toEqual(sampleItem)
+  })
+  test('returns error 404 if it does not exist', async () => {
+    const app = mockDeta(null)
+    const { status, body: response } = await request(app)
+      .get('/admin/video-channels/sample')
+      .set(this.headers)
+
+    expect(status).toBe(404)
+    expect(response).toEqual({
+      success: false,
+      error: 'Not found'
+    })
+  })
+})
+
+describe('DELETE /admin/video-channels/:key', () => {
   beforeEach(() => {
     this.headers = { 'api-token': process.env.ADMIN_API_KEY }
   })
   test('returns with status 404 if the item does not exist', async () => {
     const app = mockDeta(null)
     const { status, body: response } = await request(app)
-      .delete('/admin/filter/entries/sample')
+      .delete('/admin/video-channels/sample')
       .set(this.headers)
 
     expect(status).toBe(404)
     expect(response).toEqual({
       success: false,
-      error: 'Filter entry does not exist'
+      error: 'Video channel does not exist'
     })
   })
-  test('returns with status 200 if the item exists', async () => {
+  test('returns with status 404 if the item does not exist', async () => {
     const app = mockDeta(sampleItem)
     const { status, body: response } = await request(app)
-      .delete('/admin/filter/entries/sample')
+      .delete('/admin/video-channels/sample')
       .set(this.headers)
 
     expect(status).toBe(200)

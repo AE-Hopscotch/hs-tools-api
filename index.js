@@ -47,10 +47,10 @@ recursiveRoutes('routes')
 
 app.use(express.static('public'))
 app.get('/', (req, res) => {
-  res.send({ status: 'success', message: 'Hello, World!' })
+  res.send({ success: true, message: 'Hello, World!' })
 })
 app.use(function (req, res) {
-  res.status(404).send({ status: 'error', error: 'Not found' })
+  res.status(404).send({ success: false, error: 'Not found' })
 })
 
 if (process.env.DETA_PATH || process.env.NODE_ENV === 'test') {

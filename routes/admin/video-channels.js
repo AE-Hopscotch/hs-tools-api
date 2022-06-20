@@ -13,7 +13,7 @@ router.route('/:key')
   .get(async (req, res) => {
     const channel = await channelsDB.get(req.params.key)
     if (!channel) {
-      res.status(404).send({ status: 'error', error: 'Not found' })
+      res.status(404).send({ success: false, error: 'Not found' })
       return
     }
     res.send(channel)
@@ -35,13 +35,13 @@ router.route('/')
       channelsRes = await channelsDB.fetch({}, { last: channelsRes.last })
       channels = channels.concat(channelsRes.items)
     }
-    res.send({ items: channels, count: channels.length })
+    res.send({ items: channels, count: channels.length, success: true })
   })
   .put(async (req, res) => {
     const entry = req.body.data
     if (!entry) {
       res.status(400).send({
-        status: 'error',
+        success: false,
         error: 'No entry was provided'
       })
       return
@@ -59,7 +59,7 @@ router.route('/')
     const { error, value } = schema.validate(entry)
     if (error) {
       res.status(400).send({
-        status: 'error',
+        success: false,
         error: 'Invalid or missing parameters',
         details: error.details
       })
@@ -69,7 +69,7 @@ router.route('/')
       await channelsDB.put(entry)
     }
     res.send({
-      status: 'success',
+      success: true,
       data: entry
     })
   })

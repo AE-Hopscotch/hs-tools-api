@@ -13,7 +13,7 @@ router.put('/entry', async (req, res) => {
   const entry = req.body.data
   if (!entry) {
     res.status(400).send({
-      status: 'error',
+      success: false,
       error: 'No entry was provided'
     })
     return
@@ -30,7 +30,7 @@ router.put('/entry', async (req, res) => {
   const { error, value } = filterEntrySchema.validate(entry)
   if (error) {
     res.status(400).send({
-      status: 'error',
+      success: false,
       error: 'Invalid or missing parameters',
       details: error.details
     })
@@ -40,7 +40,7 @@ router.put('/entry', async (req, res) => {
     await filterEntriesDB.put(entry)
   }
   res.send({
-    status: 'success',
+    success: true,
     data: entry
   })
 })
@@ -60,7 +60,7 @@ router.get('/entries', async (req, res) => {
     entries = entries.concat(filterRes.items)
   }
   res.send({
-    status: 'success',
+    success: true,
     items: entries.sort((a, b) => a.key.toLowerCase() < b.key.toLowerCase() ? -1 : 1),
     count: entries.length
   })
