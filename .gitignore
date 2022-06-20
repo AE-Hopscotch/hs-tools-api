@@ -1,5 +1,13 @@
+# Dev Files
 node_modules**
-**/.DS_Store
 .env
 .deta**
+
+# Custom Ignore
 **_-**
+
+# Jest
+coverage**
+
+# Miscellaneous
+**/.DS_Store

@@ -1,7 +1,7 @@
 require('dotenv').config()
 
 function checkAdminAPIKey (req) {
-  const formToken = req.body.api_token || req.headers['api-token']
+  const formToken = req.body?.api_token || req.headers['api-token']
   return formToken === process.env.ADMIN_API_KEY
 }
 

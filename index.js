@@ -53,7 +53,7 @@ app.use(function (req, res) {
   res.status(404).send({ status: 'error', error: 'Not found' })
 })
 
-if (process.env.DETA_PATH) {
+if (process.env.DETA_PATH || process.env.NODE_ENV === 'test') {
   // export serverless app
   module.exports = app
 } else {
