@@ -6,6 +6,14 @@ function mockDeta (mockedValue) {
   return getPackage('/index.js')
 }
 
+const sampleItem = {
+  'expression': '\\b(?:ip\\s?)?address\\b',
+  'key': 'address',
+  'label': 'Address',
+  'rules': [3],
+  'severity': 0
+}
+
 describe('GET /admin/filter/entries', () => {
   beforeEach(() => {
     this.headers = { 'api-token': process.env.ADMIN_API_KEY }
@@ -42,13 +50,7 @@ describe('PUT /admin/filter/entry', () => {
       'api-token': process.env.ADMIN_API_KEY,
       'Content-Type': 'application/json'
     }
-    this.app = mockDeta({
-      'expression': '\\b(?:ip\\s?)?address\\b',
-      'key': 'address',
-      'label': 'Address',
-      'rules': [3],
-      'severity': 0
-    })
+    this.app = mockDeta(sampleItem)
   })
   test('should return status 400 on empty request body', async () => {
     const { status, body: response } = await request(this.app)
@@ -71,5 +73,18 @@ describe('PUT /admin/filter/entry', () => {
     expect(response.status).toBe('error')
     expect(response.error).toBe('Invalid or missing parameters')
     expect(response.details).toBeDefined()
+  })
+  test('should return 200 and call DB put on valid request', async () => {
+    const { status, body: response } = await request(this.app)
+      .put('/admin/filter/entry')
+      .set(this.headers)
+      .send({
+        data: sampleItem
+      })
+
+    expect(status).toBe(200)
+    expect(global.jestFn).toBeCalled()
+    expect(response.status).toBe('success')
+    expect(response.data).toEqual(sampleItem)
   })
 })
