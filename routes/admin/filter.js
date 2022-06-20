@@ -59,7 +59,11 @@ router.get('/entries', async (req, res) => {
     filterRes = await filterEntriesDB.fetch({}, { last: filterRes.last })
     entries = entries.concat(filterRes.items)
   }
-  res.send({ items: entries.sort((a, b) => a.key.toLowerCase() < b.key.toLowerCase() ? -1 : 1), count: entries.length })
+  res.send({
+    status: 'success',
+    items: entries.sort((a, b) => a.key.toLowerCase() < b.key.toLowerCase() ? -1 : 1),
+    count: entries.length
+  })
 })
 
 module.exports = router

@@ -42,6 +42,7 @@ describe('GET /admin/filter/entries', () => {
       'severity': 0
     }])
     expect(response.count).toBe(1)
+    expect(response.status).toBe('success')
   })
 })
 describe('PUT /admin/filter/entry', () => {
