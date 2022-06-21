@@ -13,9 +13,9 @@ function randomChars (length) {
   return '0'.repeat(length - str.length) + str
 }
 async function getMatchFromSecretParam (req, res, next) {
-  if (!req.query.key) return res.status(400).send({ error: 'Must include secret key' })
+  if (!req.query.key) return res.status(400).send({ success: false, error: 'Must include secret key' })
   const dbRes = await prDB.fetch({ secret: req.query.key })
-  if (dbRes.count !== 1) return res.status(400).send({ error: 'Incorrect number of entries found' })
+  if (dbRes.count !== 1) return res.status(400).send({ success: false, error: 'Incorrect number of entries found' })
   req.dbItem = dbRes.items[0]
   next()
 }
@@ -127,7 +127,7 @@ router.get('/status', async (req, res) => {
 })
 router.get('/:id', async (req, res) => {
   const dbRes = await prDB.get(req.params.id)
-  if (!dbRes) return res.status(404).send({ error: 'Could not find project modding request' })
+  if (!dbRes) return res.status(404).send({ success: false, error: 'Could not find project modding request' })
   let response = dbRes
   if (['complete', 'rejected'].includes(dbRes.status)) response = await prDB.put(Object.assign(dbRes, { downloaded_at: new Date().toISOString() }))
   res.send(response)
@@ -144,7 +144,7 @@ router.get('/:id/received', getMatchFromSecretParam, async (req, res) => {
   // GET because this will be from clicking a link in email
   const item = req.dbItem
   if (!item) return
-  if (item.status !== 'sent') return res.status(400).send({ error: 'Project Request was already marked as received' })
+  if (item.status !== 'sent') return res.status(400).send({ success: false, error: 'Project Request was already marked as received' })
   item.status = 'received'
   const response = await prDB.put(item)
   res.send(response)
