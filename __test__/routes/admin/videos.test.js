@@ -7,7 +7,7 @@ function mockDeta (mockedValue) {
 }
 
 const sampleVideo = {
-  'date': 'January 1, 1970',
+  'date': '1970-01-01T00:00:00.000Z',
   'group': 'aeMD',
   'icon': 'fa-wrench',
   'key': 'test',
@@ -130,7 +130,7 @@ describe('GET /admin/videos/bulkupdate', () => {
     expect(response.errors.length).toBe(2)
     expect(response.updated_channels).toEqual([])
     expect(response.updated_videos).toEqual([Object.assign(sampleVideo, {
-      date: '1970-01-01T08:00:00.000Z'
+      date: '1970-01-01T00:00:00.000Z'
     })])
   })
   test('returns status 200 if all items are valid', async () => {
@@ -151,7 +151,7 @@ describe('GET /admin/videos/bulkupdate', () => {
     expect(response.updated_channels).toEqual([sampleChannel])
     expect(response.updated_videos).toEqual([
       Object.assign(sampleVideo, {
-        date: '1970-01-01T08:00:00.000Z'
+        date: '1970-01-01T00:00:00.000Z'
       })
     ])
   })

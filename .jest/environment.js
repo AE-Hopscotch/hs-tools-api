@@ -10,6 +10,8 @@ global.deta = () => ({
     return class Deta {
       static get Base () {
         return () => ({
+          get: global.jestFn,
+          delete: global.jestFn,
           fetch: global.jestFn,
           put: global.jestFn
         })
