@@ -294,7 +294,7 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
     replacement(/n\.autofocus=!0,this\.input=(\w),this\.div\.appendChild\(\1\);/, '$&if(tu==="_ae_webplayer_hide_prompt_input")$1.value="",$1.style.display="none";')
   }
   if (((semVer[0] >= 1 && semVer[1] >= 5) || semVer[0] > 1) && config.projectLinkPatch) {
-    replacement(/\("\/api\/v2\/links"\),(\w)(.{0,120})"PUT"(.{0,150})(\w)=JSON\.parse\((\w)\.response[^;}]+(;.{0,40})\5\.send\(JSON\.stringify\(\w\)\)/,
+    replacement(/\("\/api\/v2\/links"\),(\w)(.{0,120})"PUT"(.{0,150})(\w)=JSON\.parse\((\w)\.response[^;}]+(;.{0,96})\5\.send\(JSON\.stringify\(\w\)\)/,
       `(\`https://api.allorigins.win/raw?url=https://c.gethopscotch.com/api/v2/projects/\${this.projectIdentifier
         .replace(/https?:\\/\\/(c|community|explore)\\.gethopscotch\\.com\\/(p|projects)\\//,'')}/metadata\`)${''
         },$1$2"GET"$3$4=JSON.parse($5.responseText).uuid,$1="?play=1&id="+$4$6$5.send()`)
