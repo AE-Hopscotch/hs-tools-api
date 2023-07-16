@@ -195,7 +195,7 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
   if (config.dataRetriever) replacement(/(\w=document\.getElementById\("project_data"\),)(\w)=\w.dataset[^;]+"data"\);/, '$1$2=JSON.stringify(AE_MOD.projectData) /*AE_MOD*/;')
   if (config.soundSrc) {
     replacement(
-      /"https:\/\/d2jeqdlsh5ay24\.cloudfront\.net\/"\+this\.name\+"\.(?:mp3"|"\+this\.extension)/,
+      /"https:\/\/d2jeqdlsh5ay24\.cloudfront\.net\/"(\+this\.name\+"\.(?:mp3"|"\+this\.extension)|\.concat\(this\.name,"\."\)\.concat\(this\.extension\))/,
       '"https://ae-hopscotch.github.io/hs-tools/play-project/hopscotch-sounds/"+this.name+"."+(this.extension||"mp3") /*AE_MOD*/;'
     )
   }
@@ -263,7 +263,7 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
         };document.querySelector('img[name="background"]').src = THIS.background.toDataURL();document.querySelector('img[name="foreground"]').src = THIS.screenshot.toDataURL();downloadProjectScreenshot();`
       )
     })
-    replacement(/\.HSMain=(\w),window\.HSMain=\1,window\.Vec2=\w\.Vec2|,this\.canvas\.style\.opacity="1",this\.screenshot\.style\.opacity="0"\},\w\}\(\)/, '$&;document.getElementById(\'screenshot-button\').src="assets/screenshot-icon.png";')
+    replacement(/window\.HSMain=(\w),window\.Vec2=\w\.Vec2|,this\.canvas\.style\.opacity="1",this\.screenshot\.style\.opacity="0"\},\w\}\(\)/, '$&;document.getElementById(\'screenshot-button\').src="assets/screenshot-icon.png";')
   }
   if (config.errorLogs) {
     replacement(/default:(\w)\.executeBlock\((\w)\)/, `default:try{$1.executeBlock($2);}catch(E){${''
@@ -286,18 +286,18 @@ router.get('/:version/modded', jsContentHeader, async (req, res) => {
       '$1this.placeholderText=($2.parameters[2]&&$2.parameters[2].computedStringValue())||"";$3,this.placeholderText'
     )
     replacement(
-      /(HSStagePrompt=s;.{0,20}\w=function\(\)\{function \w\()(\w)(\)\{[^}]+createHTMLView\()\2(\)\}return \w.prototype.createHTMLView=function\()\2\)/,
+      /(\w=function\(\)\{function \w\()(\w)(\)\{[^}]+createHTMLView\()\2(\)\}return \w.prototype.createHTMLView=function\()\2\)/,
       '$1$2,tu/* AE_MOD CUSTOM PLACEHOLDER */$3$2,tu$4$2,tu)'
     )
     replacement(/this.input.value="",this.input.focus/, 'this.input.focus')
     replacement(/document.body.appendChild\(this.div\)/, 'document.getElementById("ae-hs-player").appendChild(this.div)')
-    replacement(/n\.autofocus=!0,this\.input=(\w),this\.div\.appendChild\(\1\);/, '$&if(tu==="_ae_webplayer_hide_prompt_input")$1.value="",$1.style.display="none";')
+    replacement(/\w\.autofocus=!0,this\.input=(\w),this\.div\.appendChild\(\1\);/, '$&if(tu==="_ae_webplayer_hide_prompt_input")$1.value="",$1.style.display="none";')
   }
   if (((semVer[0] >= 1 && semVer[1] >= 5) || semVer[0] > 1) && config.projectLinkPatch) {
-    replacement(/\("\/api\/v2\/links"\),(\w)(.{0,120})"PUT"(.{0,150})(\w)=JSON\.parse\((\w)\.response[^;}]+(;.{0,96})\5\.send\(JSON\.stringify\(\w\)\)/,
+    replacement(/\("\/api\/v2\/links".{0,5}\)(.{0,50}),(\w)(=\{source.{0,120})"PUT"(.{0,150})(\w)=JSON\.parse\((\w)\.response[^;}]+(;.{0,96})\6\.send\(JSON\.stringify\(\w\)\)/,
       `(\`https://api.allorigins.win/raw?url=https://c.gethopscotch.com/api/v2/projects/\${this.projectIdentifier
         .replace(/https?:\\/\\/(c|community|explore)\\.gethopscotch\\.com\\/(p|projects)\\//,'')}/metadata\`)${''
-        },$1$2"GET"$3$4=JSON.parse($5.responseText).uuid,$1="?play=1&id="+$4$6$5.send()`)
+        }$1,$2$3"GET"$4$5=JSON.parse($6.responseText).uuid,$2="?play=1&id="+$5$7$6.send()`)
   }
 
   // May handle fails sometime later
