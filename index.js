@@ -36,7 +36,7 @@ function recursiveRoutes (folderName) {
 
     if (stat.isDirectory()) {
       recursiveRoutes(fullName)
-    } else if (file.toLowerCase().indexOf('.js')) {
+    } else if (file.toLowerCase().endsWith('.js')) {
       const routeName = fullName.replace(/^routes|\.js$/g, '')
       const route = require('./' + fullName)
       app.use(routeName.replace(/\/index$/, ''), route)
