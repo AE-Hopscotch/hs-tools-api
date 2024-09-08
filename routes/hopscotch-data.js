@@ -57,7 +57,7 @@ router.get('/blocks/:id/:trait?', async (req, res) => {
 })
 router.get('/objects', async (req, res) => {
   const data = await objectsDB.fetch()
-  res.send(data.items)
+  res.send(data.items.sort((a, b) => a.id - b.id))
 })
 router.get('/objects/:id/:trait?', async (req, res) => {
   const objectData = await objectsDB.get(req.params.id)

@@ -30,9 +30,7 @@ const modReasons = [
   ['secret-blocks', 'Add Secret Blocks to the project'],
   ['in-project', 'Description is in the project'],
   ['keyboard-support', 'Add Keyboard Support'],
-  ['filter-check', 'Project is filtered by an unknown word'],
-  ['toggle-beta-editor', 'Enable or Disable the Beta Editor'],
-  ['upgrade-player', 'Update the player without breaking anything']
+  ['filter-check', 'Project is filtered by an unknown word']
 ]
 
 router.post('/', async (req, res) => {
