@@ -68,6 +68,12 @@ const CompetitionJudging = mongoose.model('competition-judging', new mongoose.Sc
   viewingCode: String
 }, { ...schemaConfig, collection: 'competition-judging' }))
 
+const Requests = mongoose.model('requests', new mongoose.Schema({
+  _id: String,
+  type: String,
+  value: Object
+}))
+
 /**
  * @template T
  * Wraps MongoDB functions in a Deta-compatible manner
@@ -97,6 +103,7 @@ const basicDetaWrapper = model => ({
     return await model.find(query).lean()
   }
 })
+
 module.exports = {
   basicDetaWrapper,
   Blocks,
@@ -104,5 +111,6 @@ module.exports = {
   Videos,
   VideoChannels,
   FilterEntries,
-  CompetitionJudging
+  CompetitionJudging,
+  Requests
 }
