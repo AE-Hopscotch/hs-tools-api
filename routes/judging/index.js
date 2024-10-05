@@ -1,11 +1,11 @@
 const express = require('express')
 const router = express.Router()
 const Joi = require('joi')
-const { Deta } = require('deta')
-const deta = Deta(process.env.PROJECT_KEY)
-const scoringDB = deta.Base('competition-judging')
 const uuid = require('uuid')
 const { getJudgingList, generateProjectScores, generateCategoryScores } = require('../../custom/judging/get-data')
+const { basicDetaWrapper, CompetitionJudging } = require('../../custom/deta-wrapper')
+
+const scoringDB = basicDetaWrapper(CompetitionJudging)
 
 router.get('/:id', getJudgingList('accessCode'), async (req, res) => {
   const { criteria, projects } = req.judgingList
@@ -59,7 +59,7 @@ router.post('/', async (req, res) => {
     return
   }
   value.submissions = []
-  const dbItem = await scoringDB.put(value)
+  const dbItem = await scoringDB.put(value, Date.now().toString(36))
   res.send(dbItem)
 })
 

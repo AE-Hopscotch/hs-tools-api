@@ -58,6 +58,16 @@ const FilterEntries = mongoose.model('filter', new mongoose.Schema({
   start_letter: String
 }, { ...schemaConfig, collection: 'filter' }))
 
+const CompetitionJudging = mongoose.model('competition-judging', new mongoose.Schema({
+  _id: String,
+  accessCode: String,
+  criteria: Array,
+  projects: Array,
+  submissions: Array,
+  title: String,
+  viewingCode: String
+}, { ...schemaConfig, collection: 'competition-judging' }))
+
 /**
  * @template T
  * Wraps MongoDB functions in a Deta-compatible manner
@@ -75,7 +85,10 @@ const basicDetaWrapper = model => ({
   put: async function (data, id) {
     id ??= data.key
     delete data.key
-    await model.findByIdAndUpdate(id, data, { new: true, upsert: true })
+    const res = await model.findByIdAndUpdate(id, data, { new: true, upsert: true }).lean()
+    res.key = res._id
+    delete res._id
+    return res
   },
   delete: async function (id) {
     await model.findByIdAndDelete(id)
@@ -84,4 +97,12 @@ const basicDetaWrapper = model => ({
     return await model.find(query).lean()
   }
 })
-module.exports = { basicDetaWrapper, Blocks, Objects, Videos, VideoChannels, FilterEntries }
+module.exports = {
+  basicDetaWrapper,
+  Blocks,
+  Objects,
+  Videos,
+  VideoChannels,
+  FilterEntries,
+  CompetitionJudging
+}
