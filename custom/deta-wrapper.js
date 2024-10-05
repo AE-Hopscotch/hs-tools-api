@@ -32,6 +32,32 @@ const Objects = mongoose.model('objects', new mongoose.Schema({
   name: String
 }))
 
+const Videos = mongoose.model('videos', new mongoose.Schema({
+  _id: String,
+  date: String,
+  group: String,
+  icon: String,
+  name: String,
+  public: Boolean,
+  url: String
+}, schemaConfig))
+
+const VideoChannels = mongoose.model('video-channels', new mongoose.Schema({
+  _id: String,
+  requires_auth: Boolean,
+  title: String
+}, schemaConfig))
+
+const FilterEntries = mongoose.model('filter', new mongoose.Schema({
+  _id: String,
+  expression: String,
+  label: String,
+  rules: Array,
+  severity: Number,
+  sub: String,
+  start_letter: String
+}, { ...schemaConfig, collection: 'filter' }))
+
 /**
  * @template T
  * Wraps MongoDB functions in a Deta-compatible manner
@@ -58,4 +84,4 @@ const basicDetaWrapper = model => ({
     return await model.find(query).lean()
   }
 })
-module.exports = { basicDetaWrapper, Blocks, Objects }
+module.exports = { basicDetaWrapper, Blocks, Objects, Videos, VideoChannels, FilterEntries }
