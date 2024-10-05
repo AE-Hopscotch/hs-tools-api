@@ -5,20 +5,6 @@ global.getPackage = (module) => {
 }
 
 global.detaResolvedValue = {}
-global.deta = () => ({
-  Deta: function () {
-    return class Deta {
-      static get Base () {
-        return () => ({
-          get: global.jestFn,
-          delete: global.jestFn,
-          fetch: global.jestFn,
-          put: global.jestFn
-        })
-      }
-    }
-  }
-})
 
 process.env.PROJECT_KEY = 'ProjectKeySample'
 process.env.ADMIN_API_KEY = 'AdminTest'
