@@ -2,10 +2,9 @@ const express = require('express')
 const router = express.Router()
 const Joi = require('joi')
 const { adminAPIKeyMiddleware } = require('../../custom/auth.js')
-const { Deta } = require('deta')
+const { basicDetaWrapper, VideoChannels } = require('../../custom/deta-wrapper.js')
 
-const deta = Deta(process.env.PROJECT_KEY)
-const channelsDB = deta.Base('video-channels')
+const channelsDB = basicDetaWrapper(VideoChannels)
 
 router.use(adminAPIKeyMiddleware)
 
@@ -28,13 +27,8 @@ router.route('/:key')
 
 router.route('/')
   .get(async (req, res) => {
-    let channelsRes = await channelsDB.fetch()
-    let channels = channelsRes.items
-    while (channelsRes.last) {
-      // Continue until videoRes.last is not present
-      channelsRes = await channelsDB.fetch({}, { last: channelsRes.last })
-      channels = channels.concat(channelsRes.items)
-    }
+    const channels = await channelsDB.fetch()
+    channels.forEach(c => { c.key = c._id; delete c._id })
     res.send({ items: channels, count: channels.length, success: true })
   })
   .put(async (req, res) => {

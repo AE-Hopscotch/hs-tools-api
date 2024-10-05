@@ -5,24 +5,11 @@ global.getPackage = (module) => {
 }
 
 global.detaResolvedValue = {}
-global.deta = () => ({
-  Deta: function () {
-    return class Deta {
-      static get Base () {
-        return () => ({
-          get: global.jestFn,
-          delete: global.jestFn,
-          fetch: global.jestFn,
-          put: global.jestFn
-        })
-      }
-    }
-  }
-})
 
 process.env.PROJECT_KEY = 'ProjectKeySample'
 process.env.ADMIN_API_KEY = 'AdminTest'
 process.env.CORS_ORIGINS = 'https://ae-hopscotch.github.io'
+process.env.MONGO_URL = ''
 process.env.NODEMAILER_USER = 'email@example.com'
 process.env.NODEMAILER_CLIENTID = 'ThisIsFake'
 process.env.NODEMAILER_CLIENTSECRET = 'ThisIsNotReal'

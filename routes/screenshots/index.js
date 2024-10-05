@@ -2,11 +2,10 @@ const express = require('express')
 const router = express.Router()
 const Joi = require('joi')
 const axios = require('axios')
-const { Deta } = require('deta')
 
-const deta = Deta(process.env.PROJECT_KEY)
-const screenshotMapDB = deta.Base('screenshot-map')
+const screenshotMapDB = {} // Base('screenshot-map')
 
+router.use((req, res) => res.sendStatus(503))
 router.post('/speedrun', async (req, res) => {
   const postExp = /^(https:\/\/forum\.gethopscotch\.com\/t(?:\/[^/]+)?\/49377\/(\d+))/
   const schema = Joi.object({

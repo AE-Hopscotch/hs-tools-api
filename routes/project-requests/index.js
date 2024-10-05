@@ -2,9 +2,7 @@ const express = require('express')
 const router = express.Router()
 const Joi = require('joi')
 const axios = require('axios')
-const { Deta } = require('deta')
-const deta = Deta(process.env.PROJECT_KEY)
-const prDB = deta.Base('project-requests')
+const prDB = {} // Base('project-requests')
 const uuid = require('uuid')
 const { compressToEncodedURIComponent: compress } = require('lz-string')
 
@@ -30,9 +28,7 @@ const modReasons = [
   ['secret-blocks', 'Add Secret Blocks to the project'],
   ['in-project', 'Description is in the project'],
   ['keyboard-support', 'Add Keyboard Support'],
-  ['filter-check', 'Project is filtered by an unknown word'],
-  ['toggle-beta-editor', 'Enable or Disable the Beta Editor'],
-  ['upgrade-player', 'Update the player without breaking anything']
+  ['filter-check', 'Project is filtered by an unknown word']
 ]
 
 router.post('/', async (req, res) => {
@@ -125,6 +121,10 @@ router.get('/status', async (req, res) => {
     options: IS_OPEN ? modReasons : []
   })
 })
+
+// Disable all other routes until further notice
+router.use((req, res) => res.sendStatus(503))
+
 router.get('/:id', async (req, res) => {
   const dbRes = await prDB.get(req.params.id)
   if (!dbRes) return res.status(404).send({ success: false, error: 'Could not find project modding request' })

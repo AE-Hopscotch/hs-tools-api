@@ -1,7 +1,6 @@
 require('dotenv').config()
-const { Deta } = require('deta')
-const deta = Deta(process.env.PROJECT_KEY)
-const scoringDB = deta.Base('competition-judging')
+const { basicDetaWrapper, CompetitionJudging } = require('../deta-wrapper')
+const scoringDB = basicDetaWrapper(CompetitionJudging)
 const crypto = require('crypto')
 function md5 (string) {
   return crypto.createHash('md5').update(string).digest('hex')

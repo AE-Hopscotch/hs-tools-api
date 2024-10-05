@@ -1,10 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const { Deta } = require('deta')
 const axios = require('axios')
+const { basicDetaWrapper, Requests } = require('../../custom/deta-wrapper')
 
-const deta = Deta(process.env.PROJECT_KEY)
-const requestsDB = deta.Base('requests')
+const requestsDB = basicDetaWrapper(Requests)
 
 router.post('/:uuid', async (req, res) => {
   const uuid = req.params.uuid

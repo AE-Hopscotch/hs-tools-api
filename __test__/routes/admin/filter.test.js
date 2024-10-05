@@ -1,10 +1,6 @@
 const request = require('supertest')
-function mockDeta (mockedValue) {
-  jest.resetModules()
-  global.jestFn = jest.fn().mockResolvedValue(mockedValue)
-  jest.doMock('deta', global.deta)
-  return getPackage('/index.js')
-}
+const { FilterEntries } = require('../../../custom/deta-wrapper')
+const app = getPackage('/index.js')
 
 const sampleItem = {
   'expression': '\\b(?:ip\\s?)?address\\b',
@@ -13,17 +9,15 @@ const sampleItem = {
   'rules': [3],
   'severity': 0
 }
+const returnSample = () => ({ ...sampleItem, key: undefined, _id: sampleItem.key })
 
 describe('GET /admin/filter/entries', () => {
   beforeEach(() => {
     this.headers = { 'api-token': process.env.ADMIN_API_KEY }
-    this.app = mockDeta({
-      items: [sampleItem],
-      count: 1
-    })
+    jest.spyOn(FilterEntries, 'find').mockReturnValue({ lean: () => [returnSample()] })
   })
   test('should return a list with status 200', async () => {
-    const { status, body: response } = await request(this.app)
+    const { status, body: response } = await request(app)
       .get('/admin/filter/entries')
       .set(this.headers)
 
@@ -40,10 +34,10 @@ describe('PUT /admin/filter/entry', () => {
       'api-token': process.env.ADMIN_API_KEY,
       'Content-Type': 'application/json'
     }
-    this.app = mockDeta(sampleItem)
+    jest.spyOn(FilterEntries, 'findByIdAndUpdate').mockReturnValue({ lean: () => sampleItem })
   })
   test('should return status 400 on empty request body', async () => {
-    const { status, body: response } = await request(this.app)
+    const { status, body: response } = await request(app)
       .put('/admin/filter/entry')
       .set(this.headers)
       .send()
@@ -54,7 +48,7 @@ describe('PUT /admin/filter/entry', () => {
     expect(response.details).not.toBeDefined()
   })
   test('should return error details when missing parameters', async () => {
-    const { status, body: response } = await request(this.app)
+    const { status, body: response } = await request(app)
       .put('/admin/filter/entry')
       .set(this.headers)
       .send({ data: { label: 'TEST' } })
@@ -65,7 +59,7 @@ describe('PUT /admin/filter/entry', () => {
     expect(response.details).toBeDefined()
   })
   test('should return 200 and call DB put on valid request', async () => {
-    const { status, body: response } = await request(this.app)
+    const { status, body: response } = await request(app)
       .put('/admin/filter/entry')
       .set(this.headers)
       .send({
@@ -73,7 +67,7 @@ describe('PUT /admin/filter/entry', () => {
       })
 
     expect(status).toBe(200)
-    expect(global.jestFn).toBeCalled()
+    expect(FilterEntries.findByIdAndUpdate).toBeCalled()
     expect(response.success).toBe(true)
     expect(response.data).toEqual(sampleItem)
   })
@@ -84,7 +78,8 @@ describe('DELETE /admin/filter/entries/:key', () => {
     this.headers = { 'api-token': process.env.ADMIN_API_KEY }
   })
   test('returns with status 404 if the item does not exist', async () => {
-    const app = mockDeta(null)
+    jest.spyOn(FilterEntries, 'findById').mockReturnValue({ lean: () => null })
+    jest.spyOn(FilterEntries, 'findByIdAndDelete').mockReturnValue(null)
     const { status, body: response } = await request(app)
       .delete('/admin/filter/entries/sample')
       .set(this.headers)
@@ -96,7 +91,8 @@ describe('DELETE /admin/filter/entries/:key', () => {
     })
   })
   test('returns with status 200 if the item exists', async () => {
-    const app = mockDeta(sampleItem)
+    jest.spyOn(FilterEntries, 'findById').mockReturnValue({ lean: () => sampleItem })
+    jest.spyOn(FilterEntries, 'findByIdAndDelete').mockReturnValue(null)
     const { status, body: response } = await request(app)
       .delete('/admin/filter/entries/sample')
       .set(this.headers)

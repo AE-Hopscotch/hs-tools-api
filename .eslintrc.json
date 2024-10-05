@@ -16,10 +16,7 @@
     "quote-props": [
       "error",
       "as-needed",
-      {
-        "keywords": true,
-        "unnecessary": false
-      }
+      {"unnecessary": false}
     ]
   },
   "plugins": ["jest"],

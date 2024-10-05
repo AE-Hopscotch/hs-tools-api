@@ -1,11 +1,10 @@
 const express = require('express')
 const router = express.Router()
-const { Deta } = require('deta')
 const Joi = require('joi')
 const { adminAPIKeyMiddleware } = require('../../custom/auth.js')
+const { FilterEntries, basicDetaWrapper } = require('../../custom/deta-wrapper.js')
 
-const deta = Deta(process.env.PROJECT_KEY)
-const filterEntriesDB = deta.Base('filter')
+const filterEntriesDB = basicDetaWrapper(FilterEntries)
 
 router.use(adminAPIKeyMiddleware)
 
@@ -52,17 +51,13 @@ router.delete('/entries/:key', async (req, res) => {
   res.send({ success: true, deleted_key: req.params.key })
 })
 router.get('/entries', async (req, res) => {
-  let filterRes = await filterEntriesDB.fetch()
-  let entries = filterRes.items
-  while (filterRes.last) {
-    // Continue until filterRes.last is not present
-    filterRes = await filterEntriesDB.fetch({}, { last: filterRes.last })
-    entries = entries.concat(filterRes.items)
-  }
+  const filterRes = await filterEntriesDB.fetch()
+  filterRes.forEach(e => { e.key = e._id; delete e._id })
+
   res.send({
     success: true,
-    items: entries.sort((a, b) => a.key.toLowerCase() < b.key.toLowerCase() ? -1 : 1),
-    count: entries.length
+    items: filterRes.sort((a, b) => a.key.toLowerCase() < b.key.toLowerCase() ? -1 : 1),
+    count: filterRes.length
   })
 })
 

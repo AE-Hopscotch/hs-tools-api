@@ -1,10 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const { Deta } = require('deta')
+const { basicDetaWrapper, Videos, VideoChannels } = require('../custom/deta-wrapper')
 
-const deta = Deta(process.env.PROJECT_KEY)
-const videosDB = deta.Base('videos')
-const channelsDB = deta.Base('video-channels')
+const videosDB = basicDetaWrapper(Videos)
+const channelsDB = basicDetaWrapper(VideoChannels)
 
 router.post('/c/:channel?', async (req, res) => {
   // Get Channel Info
@@ -23,7 +22,7 @@ router.post('/c/:channel?', async (req, res) => {
     return res.status(401).send({
       success: false,
       status: 401,
-      auth_code: channel.auth_code + ' ' + req.body.passcode,
+      auth_code: req.body.passcode,
       contents: { title: channel.title }
     })
   }
@@ -31,22 +30,15 @@ router.post('/c/:channel?', async (req, res) => {
   delete channel.auth_code
 
   // Set Match query to either group name or public
-  const matchQuery = {
-    group: channelName
-  }
+  const matchQuery = { group: channelName }
   if (isPublicFeed) {
     delete matchQuery.group
     matchQuery.public = true
   }
 
   // Fetch videos that match the query
-  let videoRes = await videosDB.fetch(matchQuery)
-  let videos = videoRes.items
-  while (videoRes.last) {
-    // Continue until videoRes.last is not present
-    videoRes = await videosDB.fetch(matchQuery, { last: videoRes.last })
-    videos = videos.concat(videoRes.items)
-  }
+  const videos = await videosDB.fetch(matchQuery)
+  videos.forEach(v => { v.key = v._id; delete v._id })
 
   videos.forEach(video => {
     video.time = video.time || new Date(video.date).getTime()

@@ -1,23 +1,17 @@
 const express = require('express')
 const router = express.Router()
-const { Deta } = require('deta')
 const { checkAdminAPIKey } = require('../custom/auth')
 const axios = require('axios')
+const { FilterEntries, basicDetaWrapper, Requests } = require('../custom/deta-wrapper')
 
-const deta = Deta(process.env.PROJECT_KEY)
-const filterEntriesDB = deta.Base('filter')
-const requestsDB = deta.Base('requests')
+const filterEntriesDB = basicDetaWrapper(FilterEntries)
+const requestsDB = basicDetaWrapper(Requests)
 
 async function getEntries (req) {
   const versionId = '1.4.1'
-  let filterRes = await filterEntriesDB.fetch()
-  let filterEntries = filterRes.items
-  while (filterRes.last) {
-    // Continue until filterRes.last is not present
-    filterRes = await filterEntriesDB.fetch({}, { last: filterRes.last })
-    filterEntries = filterEntries.concat(filterRes.items)
-  }
-  filterEntries = filterEntries.map(e => {
+  const filterRes = await filterEntriesDB.fetch()
+  filterRes.forEach(r => { r.key = r._id; delete r._id })
+  const filterEntries = filterRes.map(e => {
     delete e.key
     return e
   })
@@ -61,12 +55,12 @@ const Filter = {
     }
   },
   checkWithAPI: async function (textValue) {
-    const customRequests = (await requestsDB.fetch({
-      type: 'filter'
-    })).items
+    const customRequests = await requestsDB.fetch({ type: 'filter' })
+    customRequests.forEach(r => { r.key = r._id; delete r._id })
 
     // PUBLISH A PROJECT
     const publishResponse = await axios(jsonSubstitution(customRequests, 'FILTER_REQ_CREATE', [
+      JSON.stringify(new Date().toISOString()),
       // eslint-disable-next-line
       `{"abilities":[{"abilityID":"1B0A3028-2960-6B4A-A625-B9D9421F2152","blocks":[{"block_class":"method","description":"Set Invisibility","type":47,"parameters":[{"defaultValue":"","value":"100","key":"percent","type":42}]}],"createdAt":0}],"eventParameters":[],"objects":[{"height":"55","xPosition":"512","objectID":"1491AE53-EA6B-D298-3C74-E194B8AA0629","width":"74","text":${JSON.stringify(textValue)},"filename":"text-object.png","type":1,"rules":["5A875C30-E6EA-C150-D833-4EECFDCE3842"],"name":"Text","yPosition":"333.5"}],"rules":[{"ruleBlockType":6000,"id":"5A875C30-E6EA-C150-D833-4EECFDCE3842","objectID":"1491AE53-EA6B-D298-3C74-E194B8AA0629","name":"","abilityID":"1B0A3028-2960-6B4A-A625-B9D9421F2152","parameters":[{"defaultValue":"","datum":{"type":7000,"block_class":"operator","description":"Game Starts"},"key":"","value":"","type":52}],"type":6000}],"customRules":[],"variables":[],"scenes":[{"objects":["1491AE53-EA6B-D298-3C74-E194B8AA0629"],"name":"Scene 1"}],"traits":[],"stageSize":{"width":375,"height":667},"version":32,"playerVersion":"1.5.8","playerUpgrades":{},"baseObjectScale":0.5,"fontSize":72,"requires_beta_editor":false,"customObjects":[]}`
     ]))

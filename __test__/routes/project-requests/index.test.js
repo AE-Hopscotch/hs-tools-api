@@ -17,7 +17,7 @@ const sampleItem = {
   'status': 'sent'
 }
 
-describe('GET /project-requests/:id', () => {
+describe.skip('GET /project-requests/:id', () => {
   beforeEach(() => {
     this.headers = { 'api-token': process.env.ADMIN_API_KEY }
   })
@@ -45,7 +45,7 @@ describe('GET /project-requests/:id', () => {
   })
 })
 
-describe('GET /project-requests/:id/reject', () => {
+describe.skip('GET /project-requests/:id/reject', () => {
   beforeEach(() => {
     this.headers = { 'api-token': process.env.ADMIN_API_KEY }
   })
@@ -75,7 +75,7 @@ describe('GET /project-requests/:id/reject', () => {
   })
 })
 
-describe('GET /project-requests/:id/received', () => {
+describe.skip('GET /project-requests/:id/received', () => {
   beforeEach(() => {
     this.headers = { 'api-token': process.env.ADMIN_API_KEY }
   })
@@ -113,7 +113,7 @@ describe('GET /project-requests/:id/received', () => {
   })
 })
 
-describe('GET /project-requests/:id/complete', () => {
+describe.skip('GET /project-requests/:id/complete', () => {
   beforeEach(() => {
     this.headers = { 'api-token': process.env.ADMIN_API_KEY }
   })

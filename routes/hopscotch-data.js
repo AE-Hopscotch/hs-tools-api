@@ -1,16 +1,15 @@
 const express = require('express')
 const router = express.Router()
-const { Deta } = require('deta')
 const Joi = require('joi')
 const { adminAPIKeyMiddleware } = require('../custom/auth.js')
+const { basicDetaWrapper, Blocks, Objects } = require('../custom/deta-wrapper.js')
 
-const deta = Deta(process.env.PROJECT_KEY)
-const blocksDB = deta.Base('blocks')
-const objectsDB = deta.Base('objects')
+const blocksDB = basicDetaWrapper(Blocks)
+const objectsDB = basicDetaWrapper(Objects)
 
 router.delete('/blocks/:id', adminAPIKeyMiddleware, async (req, res) => {
   if (!req.params.id) return res.status(400).send({ success: false, error: 'Bad request' })
-  const existingBlock = await blocksDB.get(req.params.id)
+  const existingBlock = await blocksDB.get(parseInt(req.params.id))
   if (!existingBlock) return res.status(404).send({ success: false, error: 'Block does not exist' })
   await blocksDB.delete(req.params.id)
   res.send({ success: true, deleted_item: existingBlock })
@@ -46,18 +45,22 @@ router.post('/blocks', adminAPIKeyMiddleware, async (req, res) => {
   res.send({ success: true, block: block })
 })
 router.get('/blocks', async (req, res) => {
-  const data = await blocksDB.fetch()
-  res.send(data.items)
+  const data = await Blocks.find({}, undefined, { sort: { _id: 1 } }).lean()
+  data.forEach(block => { block.id = block._id; delete block._id })
+  res.send(data)
 })
 router.get('/blocks/:id/:trait?', async (req, res) => {
   const blockData = await blocksDB.get(req.params.id)
+  blockData.id = blockData.key
   if (!blockData) return res.status(404).send({ success: false, error: `No block was found with ID ${req.params.id}` })
   if (!req.params.trait) return res.send(blockData)
   res.send({ value: blockData[req.params.trait] || null })
 })
+
 router.get('/objects', async (req, res) => {
-  const data = await objectsDB.fetch()
-  res.send(data.items)
+  const data = await Objects.find({}, undefined, { sort: { _id: 1 } }).lean()
+  data.forEach(obj => { obj.id = obj._id; delete obj._id })
+  res.send(data)
 })
 router.get('/objects/:id/:trait?', async (req, res) => {
   const objectData = await objectsDB.get(req.params.id)
@@ -65,6 +68,7 @@ router.get('/objects/:id/:trait?', async (req, res) => {
   if (!req.params.trait) return res.send(objectData)
   res.send({ value: objectData[req.params.trait] || null })
 })
+
 router.get('/', async (req, res) => {
   res.send({
     endpoints: [
@@ -72,8 +76,8 @@ router.get('/', async (req, res) => {
       'objects/:id?/:trait?'
     ],
     counts: {
-      blocks: (await blocksDB.fetch()).count,
-      objects: (await objectsDB.fetch()).count
+      blocks: (await blocksDB.fetch()).length,
+      objects: (await objectsDB.fetch()).length
     }
   })
 })
