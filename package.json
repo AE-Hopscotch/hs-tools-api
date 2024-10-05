@@ -42,6 +42,7 @@
     "jest": "^28.1.1",
     "joi": "^17.4.2",
     "lz-string": "^1.4.4",
+    "mockingoose": "^2.16.2",
     "mongoose": "^8.7.0",
     "node-html-to-image": "^5.0.0",
     "nodemailer": "^6.7.2",
