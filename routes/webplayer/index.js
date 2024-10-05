@@ -1,9 +1,7 @@
 const express = require('express')
 const router = express.Router()
-// const { Deta } = require('deta')
 const axios = require('axios')
 
-// const deta = Deta(process.env.PROJECT_KEY)
 function jsContentHeader (req, res, next) {
   res.header({ 'Content-Type': 'application/javascript' })
   next()
