@@ -81,7 +81,11 @@ const Requests = mongoose.model('requests', new mongoose.Schema({
  */
 const basicDetaWrapper = model => ({
   get: async function (id) {
-    const response = await model.findById(id).lean()
+    let response
+    try {
+      // Not using promise catch due to test dependency injection
+      response = await model.findById(id).lean()
+    } catch {}
     if (!response) return null
     // for auto type recognition to be correct
     const data = { ...response, key: response._id, _id: undefined }

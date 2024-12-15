@@ -51,8 +51,8 @@ router.get('/blocks', async (req, res) => {
 })
 router.get('/blocks/:id/:trait?', async (req, res) => {
   const blockData = await blocksDB.get(req.params.id)
-  blockData.id = blockData.key
   if (!blockData) return res.status(404).send({ success: false, error: `No block was found with ID ${req.params.id}` })
+  blockData.id = blockData.key
   if (!req.params.trait) return res.send(blockData)
   res.send({ value: blockData[req.params.trait] || null })
 })
