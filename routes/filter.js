@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
 const { checkAdminAPIKey } = require('../custom/auth')
-const axios = require('axios')
 const { FilterEntries, basicDetaWrapper, Requests } = require('../custom/deta-wrapper')
 
 const filterEntriesDB = basicDetaWrapper(FilterEntries)
@@ -54,12 +53,24 @@ const Filter = {
       return true
     }
   },
+  fetchSub: async function (jsonSub) {
+    const { url, data, headers } = jsonSub
+    delete jsonSub.url
+    delete jsonSub.data
+    delete jsonSub.headers
+    return await fetch(url, {
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify(data),
+      ...jsonSub
+    }).then(x => x.json())
+      .catch(() => {})
+  },
   checkWithAPI: async function (textValue) {
     const customRequests = await requestsDB.fetch({ type: 'filter' })
     customRequests.forEach(r => { r.key = r._id; delete r._id })
 
     // PUBLISH A PROJECT
-    const publishResponse = await axios(jsonSubstitution(customRequests, 'FILTER_REQ_CREATE', [
+    const publishResponse = await Filter.fetchSub(jsonSubstitution(customRequests, 'FILTER_REQ_CREATE', [
       JSON.stringify(new Date().toISOString()),
       // eslint-disable-next-line
       `{"abilities":[{"abilityID":"1B0A3028-2960-6B4A-A625-B9D9421F2152","blocks":[{"block_class":"method","description":"Set Invisibility","type":47,"parameters":[{"defaultValue":"","value":"100","key":"percent","type":42}]}],"createdAt":0}],"eventParameters":[],"objects":[{"height":"55","xPosition":"512","objectID":"1491AE53-EA6B-D298-3C74-E194B8AA0629","width":"74","text":${JSON.stringify(textValue)},"filename":"text-object.png","type":1,"rules":["5A875C30-E6EA-C150-D833-4EECFDCE3842"],"name":"Text","yPosition":"333.5"}],"rules":[{"ruleBlockType":6000,"id":"5A875C30-E6EA-C150-D833-4EECFDCE3842","objectID":"1491AE53-EA6B-D298-3C74-E194B8AA0629","name":"","abilityID":"1B0A3028-2960-6B4A-A625-B9D9421F2152","parameters":[{"defaultValue":"","datum":{"type":7000,"block_class":"operator","description":"Game Starts"},"key":"","value":"","type":52}],"type":6000}],"customRules":[],"variables":[],"scenes":[{"objects":["1491AE53-EA6B-D298-3C74-E194B8AA0629"],"name":"Scene 1"}],"traits":[],"stageSize":{"width":375,"height":667},"version":32,"playerVersion":"1.5.8","playerUpgrades":{},"baseObjectScale":0.5,"fontSize":72,"requires_beta_editor":false,"customObjects":[]}`
@@ -69,12 +80,12 @@ const Filter = {
     })
     await timeDelay // Let the project get filtered if it contains a filtered word
     // GET THAT PROJECT
-    const projectResponse = await axios(jsonSubstitution(customRequests, 'FILTER_REQ_GET', [publishResponse.data.uuid]))
+    const projectResponse = await Filter.fetchSub(jsonSubstitution(customRequests, 'FILTER_REQ_GET', [publishResponse.uuid]))
     // UNPUBLISH THAT PROJECT
-    await axios(jsonSubstitution(customRequests, 'FILTER_REQ_UNPUBLISH', [publishResponse.data.uuid]))
+    await Filter.fetchSub(jsonSubstitution(customRequests, 'FILTER_REQ_UNPUBLISH', [publishResponse.uuid]))
     // DELETE THAT PROJECT
-    await axios(jsonSubstitution(customRequests, 'FILTER_REQ_DELETE', [publishResponse.data.uuid]))
-    return { filtered: projectResponse.data.has_been_removed, projectResponse }
+    await Filter.fetchSub(jsonSubstitution(customRequests, 'FILTER_REQ_DELETE', [publishResponse.uuid]))
+    return { filtered: projectResponse.has_been_removed, projectResponse }
   }
 }
 async function checkFilter (req, res) {
@@ -89,7 +100,7 @@ async function checkFilter (req, res) {
     version: version,
     filtered: filtered,
     known: filtered ? false : undefined,
-    in_moderation: (!filtered ? projectResponse.data.in_moderation : undefined)
+    in_moderation: (!filtered ? projectResponse.in_moderation : undefined)
   })
 }
 

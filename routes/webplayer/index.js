@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const axios = require('axios')
 
 function jsContentHeader (req, res, next) {
   res.header({ 'Content-Type': 'application/javascript' })
@@ -8,26 +7,29 @@ function jsContentHeader (req, res, next) {
 }
 
 async function getLatestPlayers (req, res, version, channel) {
-  const INDEX_RESPONSE = (await axios({
+  const url = `https://d3nbkco6xo1vz0.cloudfront.net/${channel || 'production'}/INDEX`
+  const INDEX_RESPONSE = await fetch(url, {
     'method': 'GET',
-    'url': `https://d3nbkco6xo1vz0.cloudfront.net/${channel || 'production'}/INDEX`,
     'headers': {
       'Host': 'd3nbkco6xo1vz0.cloudfront.net',
       'Connection': 'keep-alive',
       'Accept': '*/*',
       'Accept-Language': 'en-us'
     }
-  }))?.data
-  const EDITOR_INDEX_RESPONSE = (await axios({
+  }).then(async x => x.ok ? await x.json() : null)
+    .catch(() => {})
+  const indexUrl = `https://d3nbkco6xo1vz0.cloudfront.net/${channel || 'production'}/EDITOR_INDEX`
+  const EDITOR_INDEX_RESPONSE = await fetch(indexUrl, {
     'method': 'GET',
-    'url': `https://d3nbkco6xo1vz0.cloudfront.net/${channel || 'production'}/EDITOR_INDEX`,
     'headers': {
       'Host': 'd3nbkco6xo1vz0.cloudfront.net',
       'Connection': 'keep-alive',
       'Accept': '*/*',
       'Accept-Language': 'en-us'
     }
-  }))?.data?.editor_table?.webplayers
+  }).then(async x => x.ok ? await x.json() : null)
+    .then(x => x?.editor_table?.webplayers)
+    .catch(() => {})
   const INDEX = Object.assign(INDEX_RESPONSE, EDITOR_INDEX_RESPONSE)
   if (typeof INDEX_RESPONSE !== 'object' || typeof EDITOR_INDEX_RESPONSE !== 'object') {
     res.status(500).send({ error: 'Internal Server Error' })
@@ -68,20 +70,23 @@ async function getPlayerFile (req, res) {
     res.status(404).header({ 'Content-Type': 'application/json' }).send(String(latest))
     return null
   }
-  const playerResponse = (await axios({
+  const playerUrl = `https://d3nbkco6xo1vz0.cloudfront.net/${channel}/${latest.path}`
+  const playerResponse = await fetch(playerUrl, {
     'method': 'GET',
-    'url': `https://d3nbkco6xo1vz0.cloudfront.net/${channel}/${latest.path}`,
     'headers': {
       'Host': 'd3nbkco6xo1vz0.cloudfront.net',
       'Connection': 'keep-alive',
       'Accept': '*/*',
       'Accept-Language': 'en-us'
     }
-  }).catch(e => {
-    res.status(404).header({ 'Content-Type': 'application/json' }).send('null')
-  }))?.data
+  })
+    .then(async x => x.ok ? await x.text() : null)
+    .catch(() => {})
 
   if (!playerResponse || res.headersSent) return
+
+  res.status(404).header({ 'Content-Type': 'application/json' }).send('null')
+
   return playerResponse
 }
 

@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
 const Joi = require('joi')
-const axios = require('axios')
 const prDB = {} // Base('project-requests')
 const uuid = require('uuid')
 const { compressToEncodedURIComponent: compress } = require('lz-string')
@@ -45,9 +44,9 @@ router.post('/', async (req, res) => {
   if (error) return res.status(400).send({ error: 'Parameter ' + error.details[0].path[0] + ' is invalid' })
 
   // Get Project
-  const projectReq = await axios({
+  const url = 'https://c.gethopscotch.com/api/v1/projects/' + req.body['project-url'].replace(/^(https:\/\/c(community)?.gethopscotch.com\/(p|e|project)\/)?|([?#].*)?$/g, '')
+  const project = await fetch(url, {
     'method': 'GET',
-    'url': 'https://c.gethopscotch.com/api/v1/projects/' + req.body['project-url'].replace(/^(https:\/\/c(community)?.gethopscotch.com\/(p|e|project)\/)?|([?#].*)?$/g, ''),
     'headers': {
       'Host': 'c.gethopscotch.com',
       'Content-Type': 'application/json',
@@ -55,12 +54,10 @@ router.post('/', async (req, res) => {
       'Accept': '*/*',
       'Accept-Language': 'en-us'
     }
-  }).catch(e => {
-  })
-  if (!projectReq) return res.status(404).send({ error: 'Project could not be retrieved' })
+  }).then(async x => x.ok && await x.json()).catch(() => {})
+  if (!project) return res.status(404).send({ error: 'Project could not be retrieved' })
 
   // Check to make sure there are not custom images
-  const project = projectReq.data
   if (project.customObjects.length > 0) return res.status(400).send({ error: 'Project cannot have custom images' })
 
   const response = await prDB.put({
@@ -88,10 +85,10 @@ router.post('/', async (req, res) => {
     ]
   })
   const profilePicture = project.user.remote_avatar_url || `https://ae-hopscotch.github.io/hs-tools/images/webavatars/${project.user?.avatar_type || 0}.png`
-  await axios({
+  await fetch(process.env.PROJECT_REQUEST_WEBHOOK, {
     method: 'POST',
-    url: process.env.PROJECT_REQUEST_WEBHOOK,
-    data: {
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       embeds: [{
         color: 0x521256,
         author: { name: 'New Project Request', icon_url: profilePicture },
@@ -108,7 +105,7 @@ router.post('/', async (req, res) => {
         ],
         timestamp: new Date().toISOString()
       }]
-    }
+    })
   })
 
   delete response.secret // Exclude secret from response

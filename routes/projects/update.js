@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const axios = require('axios')
 const { basicDetaWrapper, Requests } = require('../../custom/deta-wrapper')
 
 const requestsDB = basicDetaWrapper(Requests)
@@ -16,34 +15,36 @@ router.post('/:uuid', async (req, res) => {
   const endpoints = (await requestsDB.get('UPDATE_REQ_ENDPOINTS')).value
 
   // Get the current project
-  const currentProject = (await axios({
+  const url = 'https://c.gethopscotch.com/api/v1/projects/' + uuid
+  const currentProject = await fetch(url, {
     'method': 'GET',
-    'url': 'https://c.gethopscotch.com/api/v1/projects/' + uuid,
     'headers': {
       'Host': 'c.gethopscotch.com',
       'Content-Type': 'application/json',
       'Connection': 'keep-alive',
       'Accept': '*/*'
     }
-  }).catch(e => {}))?.data
+  }).then(async x => x.ok ? x.json() : null)
+    .catch(() => {})
 
   // Check if exists and published
   if (!currentProject) return res.status(404).send({ error: 'Could not find project' })
   if (!currentProject.correct_published_at) return res.status(400).send({ error: 'Project is not published' })
 
   // Log in to web explorer with provided username and password
-  const loginResponse = (await axios({
+  const loginResponse = await fetch('https://c.gethopscotch.com' + endpoints.login, {
     method: 'POST',
-    url: 'https://c.gethopscotch.com' + endpoints.login,
-    data: { account: acct },
+    body: JSON.stringify({ account: acct }),
     headers: {
       'Host': 'c.gethopscotch.com',
       'Content-Type': 'application/json',
       'Connection': 'keep-alive',
       'Accept': '*/*'
     }
-  }).catch(e => {}))
-  if (!loginResponse || loginResponse.data?.error) return res.status(403).send({ error: 'Incorrect username or password' })
+  })
+    .then(x => x.ok && x.json())
+    .catch(() => {})
+  if (!loginResponse || loginResponse.error) return res.status(403).send({ error: 'Incorrect username or password' })
 
   const credential = loginResponse?.headers['set-cookie']
 
@@ -59,9 +60,8 @@ router.post('/:uuid', async (req, res) => {
       'project_json': project
     }
   }, rootTraits.value)
-  const updateResponse = await axios({
+  const updateResponse = await fetch('https://c.gethopscotch.com' + endpoints.update, {
     method: 'POST',
-    url: 'https://c.gethopscotch.com' + endpoints.update,
     headers: {
       'Host': 'c.gethopscotch.com',
       'Content-Type': 'application/json',
@@ -69,12 +69,12 @@ router.post('/:uuid', async (req, res) => {
       'Accept': '*/*',
       'Cookie': credential
     },
-    data: reqBody
-  })
+    body: JSON.stringify(reqBody)
+  }).then(x => x.ok ? x.json() : null).catch(() => {})
 
-  const success = !!updateResponse?.data?.uuid
+  const success = !!updateResponse?.uuid
   if (!success) return res.status(500).send({ error: 'Unable to update project' })
-  res.send({ success: true, uuid: updateResponse.data.uuid })
+  res.send({ success: true, uuid: updateResponse.uuid })
 })
 
 module.exports = router

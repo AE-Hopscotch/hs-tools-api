@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
 const Joi = require('joi')
-const axios = require('axios')
 
 const screenshotMapDB = {} // Base('screenshot-map')
 
@@ -24,11 +23,10 @@ router.post('/speedrun', async (req, res) => {
   if (existingEntries.count) return res.status(409).send({ error: 'Post screenshot has already been submitted' })
 
   const jsonLink = match[1] + '.json'
-  const response = await axios(jsonLink)
-  const postData = response?.data
-  if (!postData) return res.status(404).send({ error: 'Post not found' })
+  const response = await fetch(jsonLink).then(x => x.json())
+  if (!response) return res.status(404).send({ error: 'Post not found' })
 
-  const individualPost = postData.post_stream?.posts?.find(post => String(post.post_number) === match[2])
+  const individualPost = response.post_stream?.posts?.find(post => String(post.post_number) === match[2])
   if (!individualPost) return res.status(404).send({ error: 'Post not found' })
 
   const imgRegex = '<img src="(https://aws\\d+\\.discourse-cdn\\.com/gethopscotch/[^".]*?\\.[a-z]+)'

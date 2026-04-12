@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const axios = require('axios')
 const Joi = require('joi')
 const htmlToImage = require('node-html-to-image')
 const hashStringToColor = require('../../custom/hash-string-color')
@@ -8,11 +7,10 @@ const bufferType = require('buffer-type')
 const invert = require('invert-color')
 
 async function getProject (id) {
-  const projectResponse = await axios({
-    method: 'GET',
-    url: 'https://c.gethopscotch.com/api/v1/projects/' + id
-  })
-  return projectResponse.data
+  const projectResponse = await fetch('https://c.gethopscotch.com/api/v1/projects/' + id, {
+    method: 'GET'
+  }).then(x => x.json())
+  return projectResponse
 }
 const ProjectStatistics = {
   builderStats: async function (project) {
@@ -455,18 +453,14 @@ async function thumbnailBase64 (url, title, preferLetter, cursiveLetter) {
   if (preferLetter) {
     icon = await letterAvatar(title, cursiveLetter)
   } else {
-    const iconResponse = await axios({
+    const iconResponse = await fetch(url, {
       method: 'GET',
-      url: url,
-      responseType: 'arraybuffer',
-      headers: {
-        origin: urlObject.origin
-      }
-    }).catch(() => {})
-    if (iconResponse?.data) {
+      headers: { origin: urlObject.origin }
+    }).then(async x => x.ok && await x.arrayBuffer()).catch(() => {})
+    if (iconResponse) {
       // Thumbnail Exists
       console.log(url)
-      icon = Buffer.from(iconResponse.data || '', 'binary')
+      icon = Buffer.from(iconResponse || '', 'binary')
     } else {
       // No thumbnail found
       icon = await letterAvatar(title, cursiveLetter)
@@ -495,9 +489,9 @@ router.get('/:id/stats', async (req, res) => {
 })
 
 router.post('/:id/pwa', async (req, res) => {
-  const AEPLAYERPAGE = (await axios({
-    url: 'https://ae-hopscotch.github.io/hs-tools/play-project/'
-  }).catch(e => console.error(e)))?.data
+  const AEPLAYERPAGE = (await fetch('https://ae-hopscotch.github.io/hs-tools/play-project/')
+    .then(async x => x.ok && await x.text())
+    .catch(e => console.error(e)))
   const playerPageResponse = {
     head: AEPLAYERPAGE.match(/<head(.|[\r\n\s])*?<\/head>/)[0].replace(/<\/?head.*?>/g, '')
       .replace(/<(link|meta).*(icon|twitter|og:|description|theme-color).*>|<meta.*app.*>/g, '') // Strip webapp meta tags
