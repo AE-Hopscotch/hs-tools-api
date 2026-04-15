@@ -83,9 +83,10 @@ async function getPlayerFile (req, res) {
     .then(async x => x.ok ? await x.text() : null)
     .catch(() => {})
 
-  if (!playerResponse || res.headersSent) return
-
-  res.status(404).header({ 'Content-Type': 'application/json' }).send('null')
+  if (!playerResponse) {
+    res.status(404).header({ 'Content-Type': 'application/json' }).send('null')
+    return
+  }
 
   return playerResponse
 }
